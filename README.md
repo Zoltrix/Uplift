@@ -11,5 +11,9 @@
 
 * [Hillstrom Dataset](http://blog.minethatdata.com/2008/03/minethatdata-e-mail-analytics-and-data.html)
 
+## Issues with R uplift package
+
+* No support for multilevel trearment/outcome variables
+
 
 # Checklist (done so far)
