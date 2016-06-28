@@ -1,0 +1,30 @@
+library(uplift)
+library(dplyr)
+##load the data
+hillstrom <- read.csv("datasets/Hillstrom.csv")
+
+str(hillstrom)
+
+##change some of the ints to factors
+hillstrom$mens <- as.factor(hillstrom$mens)
+hillstrom$womens <- as.factor(hillstrom$womens)
+hillstrom$newbie <- as.factor(hillstrom$newbie)
+hillstrom$visit <- as.factor(hillstrom$visit)
+
+str(hillstrom)
+
+##conversion is a stronger outcome than visit
+target <- 'conversion'
+
+##treatment variable must be in binary format and take values 0/1
+hillstrom <- hillstrom %>% mutate(treatment = ifelse(segment == 'No E-Mail', 0, 1))
+hillstrom$segment <- NULL
+
+### create a formula of all the predictor + treatment var against the target
+predictors <- setdiff(names(hillstrom), c(target, 'treatment'))
+
+formula <- reformulate(termlabels = c(predictors, 'trt(treatment)'), response = target)
+
+explore(formula, hillstrom)
+
+
