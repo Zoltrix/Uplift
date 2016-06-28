@@ -17,3 +17,15 @@
 
 
 # Checklist (done so far)
+
+* WIP summary table of different models, different metrics and most important variable
+
+
+# Model Summary
+
+| Model | Split method | Most important var | importance |
+|:-----:|:------------:|:------------------:|:----------:|
+|   RF  |     Chisq    |       history      |    38.79   |
+|   RF  |      ED      |       history      |    47.28   |
+|   RF  |      KL      |       history      |    41.26   |
+|   RF  |      Int     |        spend       |    60.5    |
