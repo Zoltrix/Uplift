@@ -28,3 +28,27 @@ formula <- reformulate(termlabels = c(predictors, 'trt(treatment)'), response = 
 explore(formula, hillstrom)
 
 
+#Try out the different models in uplift package
+
+##RF
+
+###RF, split_method = Chisq
+fit_RF_Chisq <- upliftRF(formula, hillstrom, split_method="Chisq")
+summary(fit_RF_Chisq)
+
+###RF, split_method = ED (Eucledian Dist)
+fit_RF_ED <- upliftRF(formula, hillstrom, split_method="ED")
+summary(fit_RF_ED)
+
+
+###RF, split_method = KL (Kullback-Leibler divergence)
+fit_RF_KL <- upliftRF(formula, hillstrom, split_method="KL")
+summary(fit_RF_KL)
+
+
+###RF, split_method = Int (Interaction method)
+fit_RF_Int <- upliftRF(formula, hillstrom, split_method="Int")
+summary(fit_RF_Int)
+
+
+
