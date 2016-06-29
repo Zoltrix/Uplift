@@ -51,4 +51,8 @@ fit_RF_Int <- upliftRF(formula, hillstrom, split_method="Int")
 summary(fit_RF_Int)
 
 
-
+##modelProfile
+pred_RF <- predict(fit_RF_KL, hillstrom)
+uplift_RF <- pred_RF[, 1] - pred_RF[, 2]
+with_predictions = data.frame(hillstrom, uplift_RF)
+modelProfile(reformulate(predictors, response = 'uplift_RF'), data = with_predictions, group_label = "D")
