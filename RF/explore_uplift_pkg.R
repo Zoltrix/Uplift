@@ -54,13 +54,18 @@ summary(fit_RF_KL)
 fit_RF_Int <- upliftRF(formula, hillstrom_train, split_method="Int")
 summary(fit_RF_Int)
 
+plot_uplift <- function(model_fit) {
+  pred_RF <- predict(model_fit, hillstrom_test)
+  uplift_RF <- pred_RF[, 1] - pred_RF[, 2]
+  with_predictions = data.frame(hillstrom_test, uplift_RF)
+  #modelProfile(reformulate(predictors, response = 'uplift_RF'), data = with_predictions, group_label = "D")
+  
+  perf <- performance(pred_RF[, 1], pred_RF[, 2], with_predictions$conversion, with_predictions$treatment)
+  plot(perf[, 8] ~ perf[, 1], type ="l", xlab = "Decile", ylab = "uplift")
+}
 
 ##modelProfile
-pred_RF <- predict(fit_RF_KL, hillstrom_test)
-uplift_RF <- pred_RF[, 1] - pred_RF[, 2]
-with_predictions = data.frame(hillstrom_test, uplift_RF)
-modelProfile(reformulate(predictors, response = 'uplift_RF'), data = with_predictions, group_label = "D")
-
-perf <- performance(pred_RF[, 1], pred_RF[, 2], with_predictions$conversion, with_predictions$treatment)
-plot(perf[, 8] ~ perf[, 1], type ="l", xlab = "Decile", ylab = "uplift")
-
+plot_uplift(fit_RF_KL)
+plot_uplift(fit_RF_Chisq)
+plot_uplift(fit_RF_ED)
+plot_uplift(fit_RF_Int)
