@@ -1,8 +1,8 @@
 library(uplift)
 library(dplyr)
+library(caret)
 ##load the data
 hillstrom <- read.csv("datasets/Hillstrom.csv")
-
 str(hillstrom)
 
 ##change some of the ints to factors
@@ -27,32 +27,40 @@ formula <- reformulate(termlabels = c(predictors, 'trt(treatment)'), response = 
 
 explore(formula, hillstrom)
 
+##Split training & testing
+inTrain <- createDataPartition(hillstrom$conversion, p = 0.7, list = F)
+hillstrom_train <- hillstrom[inTrain, ]
+hillstrom_test <- hillstrom[-inTrain, ]
 
 #Try out the different models in uplift package
 
 ##RF
 
 ###RF, split_method = Chisq
-fit_RF_Chisq <- upliftRF(formula, hillstrom, split_method="Chisq")
+fit_RF_Chisq <- upliftRF(formula, hillstrom_train, split_method="Chisq")
 summary(fit_RF_Chisq)
 
 ###RF, split_method = ED (Eucledian Dist)
-fit_RF_ED <- upliftRF(formula, hillstrom, split_method="ED")
+fit_RF_ED <- upliftRF(formula, hillstrom_train, split_method="ED")
 summary(fit_RF_ED)
 
 
 ###RF, split_method = KL (Kullback-Leibler divergence)
-fit_RF_KL <- upliftRF(formula, hillstrom, split_method="KL")
+fit_RF_KL <- upliftRF(formula, hillstrom_train, split_method="KL")
 summary(fit_RF_KL)
 
 
 ###RF, split_method = Int (Interaction method)
-fit_RF_Int <- upliftRF(formula, hillstrom, split_method="Int")
+fit_RF_Int <- upliftRF(formula, hillstrom_train, split_method="Int")
 summary(fit_RF_Int)
 
 
 ##modelProfile
-pred_RF <- predict(fit_RF_KL, hillstrom)
+pred_RF <- predict(fit_RF_KL, hillstrom_test)
 uplift_RF <- pred_RF[, 1] - pred_RF[, 2]
-with_predictions = data.frame(hillstrom, uplift_RF)
+with_predictions = data.frame(hillstrom_test, uplift_RF)
 modelProfile(reformulate(predictors, response = 'uplift_RF'), data = with_predictions, group_label = "D")
+
+perf <- performance(pred_RF[, 1], pred_RF[, 2], with_predictions$conversion, with_predictions$treatment)
+plot(perf[, 8] ~ perf[, 1], type ="l", xlab = "Decile", ylab = "uplift")
+
