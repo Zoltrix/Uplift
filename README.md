@@ -13,7 +13,7 @@
 
 ## Issues with R uplift package
 
-* No support for multilevel trearment/outcome variables
+* No support for multilevel trearment/outcome variables (except for Knn, Multi-treatment is supported)
 
 
 # Checklist (done so far)

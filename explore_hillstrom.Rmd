@@ -1,0 +1,153 @@
+---
+title: "Try different models/split_methods on the hillstorm dataset"
+output: html_document
+---
+
+```{r, message=FALSE, include=FALSE}
+library(uplift)
+library(dplyr)
+library(caret)
+```
+
+##Preparing the data
+```{r}
+hillstrom <- read.csv("datasets/Hillstrom.csv")
+str(hillstrom)
+
+##change some of the ints to factors
+hillstrom$mens <- as.factor(hillstrom$mens)
+hillstrom$womens <- as.factor(hillstrom$womens)
+hillstrom$newbie <- as.factor(hillstrom$newbie)
+hillstrom$visit <- as.factor(hillstrom$visit)
+
+str(hillstrom)
+
+##conversion is a stronger outcome than visit
+target <- 'conversion'
+
+##treatment variable must be in binary format and take values 0/1
+hillstrom <- hillstrom %>% mutate(treatment = ifelse(segment == 'No E-Mail', 0, 1))
+hillstrom$segment <- NULL
+
+#split
+inTrain <- createDataPartition(hillstrom$conversion, p = 0.7, list = F)
+hillstrom_train <- hillstrom[inTrain, ]
+hillstrom_test <- hillstrom[-inTrain, ]
+
+#create formula
+predictors <- setdiff(names(hillstrom), c(target, 'treatment'))
+formula <- reformulate(termlabels = c(predictors, 'trt(treatment)'), response = target)
+```
+
+##Explore data for uplift modeling
+```{r}
+explore(formula, hillstrom_train)
+```
+
+####For plotting uplift curves
+```{r}
+plot_uplift <- function(model_fit, test_data) {
+  pred_RF <- predict(model_fit, test_data)
+  uplift_RF <- pred_RF[, 1] - pred_RF[, 2]
+  with_predictions = data.frame(test_data, uplift_RF)
+  #modelProfile(reformulate(predictors, response = 'uplift_RF'), data = with_predictions, group_label = "D")
+  
+  perf <- performance(pred_RF[, 1], pred_RF[, 2], with_predictions$conversion, with_predictions$treatment)
+  plot(perf[, 8] ~ perf[, 1], type ="l", xlab = "Decile", ylab = "uplift")
+}
+```
+
+#RF
+
+###Splitting method: Chisq
+```{r}
+fit_RF_Chisq <- upliftRF(formula, hillstrom_train, split_method="Chisq")
+summary(fit_RF_Chisq)
+```
+
+```{r}
+plot_uplift(fit_RF_Chisq, hillstrom_test)
+```
+
+###Splitting method: ED (Eucledian Dist)
+```{r}
+fit_RF_ED <- upliftRF(formula, hillstrom_train, split_method="ED")
+summary(fit_RF_ED)
+```
+
+```{r}
+plot_uplift(fit_RF_ED, hillstrom_test)
+```
+
+###Splitting method: KL (Kullback-Leibler divergence)
+```{r}
+fit_RF_KL <- upliftRF(formula, hillstrom_train, split_method="KL")
+summary(fit_RF_KL)
+```
+
+```{r}
+plot_uplift(fit_RF_KL, hillstrom_test)
+```
+
+
+###Splitting method: Int (Interaction method)
+```{r}
+fit_RF_Int <- upliftRF(formula, hillstrom_train, split_method="Int")
+summary(fit_RF_Int)
+```
+
+```{r}
+plot_uplift(fit_RF_Int, hillstrom_test)
+```
+
+
+#ccif
+
+###Splitting method: Chisq
+```{r}
+fit_ccif_Chisq <- ccif(formula, hillstrom_train, split_method="Chisq")
+summary(fit_ccif_Chisq)
+```
+
+```{r}
+plot_uplift(fit_ccif_Chisq, hillstrom_test)
+```
+
+###Splitting method: ED (Eucledian Dist)
+```{r}
+fit_ccif_ED <- ccif(formula, hillstrom_train, split_method="ED")
+summary(fit_ccif_ED)
+```
+
+```{r}
+plot_uplift(fit_ccif_ED, hillstrom_test)
+```
+
+###Splitting method: KL (Kullback-Leibler divergence)
+```{r}
+fit_ccif_KL <- ccif(formula, hillstrom_train, split_method="KL")
+summary(fit_ccif_KL)
+```
+
+```{r}
+plot_uplift(fit_ccif_KL, hillstrom_test)
+```
+
+
+###Splitting method: Int (Interaction method)
+```{r}
+fit_ccif_Int <- ccif(formula, hillstrom_train, split_method="Int")
+summary(fit_ccif_Int)
+```
+
+```{r}
+plot_uplift(fit_ccif_Int, hillstrom_test)
+```
+
+
+#knn [Extremely slow, eats up memory]
+
+```{r, eval=FALSE}
+fit_knn <- upliftKNN(hillstrom_train, hillstrom_test, hillstrom_train$conversion, hillstrom_train$treatment, k = 3)
+summary(fit_knn)
+```
